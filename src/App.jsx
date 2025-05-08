@@ -5,7 +5,6 @@ import HowItWorks from './components/HowItWorks.jsx';
 import WhyChooseUs from './components/WhyChooseUs.jsx';
 import Reviews from './components/Reviews.jsx';
 import ContactForm from './components/ContactForm.jsx';
-import Chatbot from './components/Chatbot.jsx';
 
 
 const sectionVariants = {
@@ -53,7 +52,6 @@ function App() {
       <motion.section variants={sectionVariants}>
         <ContactForm />
       </motion.section>
-      <Chatbot />
     </motion.div>
   );
 }
