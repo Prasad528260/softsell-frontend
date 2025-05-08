@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import emailjs from '@emailjs/browser';
 
 
 const licenseTypes = [
@@ -41,6 +42,8 @@ const ContactForm = () => {
   });
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [emailError, setEmailError] = useState('');
 
   const validate = () => {
     const newErrors = {};
@@ -57,14 +60,34 @@ const ContactForm = () => {
     setErrors({ ...errors, [e.target.name]: undefined });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setEmailError('');
     const validationErrors = validate();
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length === 0) {
-      setSubmitted(true);
-      setForm({ name: '', email: '', company: '', licenseType: '', message: '' });
-      setTimeout(() => setSubmitted(false), 3000);
+      setSending(true);
+      try {
+        await emailjs.send(
+          import.meta.env.VITE_EMAILJS_SERVICE_ID,
+          import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+          {
+            name: form.name,
+            email: form.email,
+            company: form.company,
+            licenseType: form.licenseType,
+            message: form.message,
+          },
+          import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+        );
+        setSubmitted(true);
+        setForm({ name: '', email: '', company: '', licenseType: '', message: '' });
+        setTimeout(() => setSubmitted(false), 3000);
+      } catch (error) {
+        setEmailError('Failed to send message. Please try again later.');
+      } finally {
+        setSending(false);
+      }
     }
   };
 
@@ -151,15 +174,17 @@ const ContactForm = () => {
         {errors.message && <div className="text-red-600 text-sm -mt-2 mb-1">{errors.message}</div>}
 
         <motion.button
-          className="bg-cyan-400 hover:bg-violet-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-all duration-300 mt-4 w-full md:w-auto"
+          className="bg-cyan-400 hover:bg-violet-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-all duration-300 mt-4 w-full md:w-auto disabled:opacity-60"
           type="submit"
+          disabled={sending}
           whileHover={{ scale: 1.07, boxShadow: '0 8px 32px 0 rgba(0,255,255,0.25)' }}
           whileTap={{ scale: 0.96 }}
           variants={item}
         >
-          Send
+          {sending ? 'Sending...' : 'Send'}
         </motion.button>
         {submitted && <div className="text-green-600 mt-2">Thank you! We received your message.</div>}
+        {emailError && <div className="text-red-600 mt-2">{emailError}</div>}
       </motion.form>
     </motion.section>
   );
