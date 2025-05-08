@@ -68,7 +68,7 @@ const ContactForm = () => {
     if (Object.keys(validationErrors).length === 0) {
       setSending(true);
       try {
-        await emailjs.send(
+        const result = await emailjs.send(
           import.meta.env.VITE_EMAILJS_SERVICE_ID,
           import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
           {
@@ -80,11 +80,21 @@ const ContactForm = () => {
           },
           import.meta.env.VITE_EMAILJS_PUBLIC_KEY
         );
+        console.log('EmailJS response:', result);
         setSubmitted(true);
         setForm({ name: '', email: '', company: '', licenseType: '', message: '' });
         setTimeout(() => setSubmitted(false), 3000);
       } catch (error) {
-        setEmailError('Failed to send message. Please try again later.');
+        console.error('EmailJS error:', error);
+        let errorMessage = 'Failed to send message. Error: ';
+        if (error.text) {
+          errorMessage += error.text;
+        } else if (error.message) {
+          errorMessage += error.message;
+        } else {
+          errorMessage += 'Unknown error occurred';
+        }
+        setEmailError(errorMessage);
       } finally {
         setSending(false);
       }
